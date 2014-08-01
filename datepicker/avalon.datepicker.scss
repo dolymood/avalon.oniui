@@ -44,11 +44,13 @@ $uiname-dropdown: "ui-dropdown";
 }
 
 .ui-datepicker {
+    position: relative;
+    display: block;
     font-size: 0;
     white-space: nowrap;
     color: #333;
-    position: relative;
-    z-index: 1000;
+    z-index: 10;
+    width: auto;
     tr, td, th {
         border: 0;
     }
@@ -81,7 +83,22 @@ $uiname-dropdown: "ui-dropdown";
     .ui-datepicker-content-content {
         padding: 0 10px;
         width: 196px;  
-        display: inline-block;
+        position: relative;
+        @include inline-block();
+        .ui-datepicker-watermark {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            width: 196px;
+            height: 150px;
+            background: transparent;
+            color: #000;
+            _color: lighten(#000, 95%);
+            @include opacity(0.05);
+            font-size: 150px;
+            line-height: 150px;
+            text-align: center;
+        }
     }
     
     .ui-datepicker-header {
@@ -115,6 +132,8 @@ $uiname-dropdown: "ui-dropdown";
     }
     .ui-datepicker-calendar-days {
         height: 150px;
+        position: relative;
+        z-index: 20;
     }
     .ui-datepicker-calendar-week, .ui-datepicker-calendar-days {
         border-collapse: collapse;
@@ -141,11 +160,12 @@ $uiname-dropdown: "ui-dropdown";
         text-align: center;  
         line-height: 18px;
         padding: 3px 0;
+        background: transparent;
     }
     .ui-state-default {
         background: #fff;
     }
-    .ui-datepicker-day-hover  {
+    .ui-datepicker-calendar-days .ui-datepicker-day-hover  {
         background: #dbebff;
     }
     .ui-datepicker-today {
@@ -164,7 +184,7 @@ $uiname-dropdown: "ui-dropdown";
     .ui-datepicker-calendar-days .ui-state-disabled {
         color: #cccccc;
         cursor: default;
-        background: #fff;
+        background: transparent;
     }
     .ui-datepicker-calendar-days .ui-datepicker-selected {
         background: #3775c0;
@@ -190,25 +210,23 @@ $uiname-dropdown: "ui-dropdown";
             border-right: 1px solid #e5e5e5;
         }
     }
-}
-.ui-dropdown-menu {
-    height: 200px;
-    .ui-dropdown-item {
-        color: #333333;
-        font-size: 12px;
-        padding: 0;
-        text-indent: 0;
-        text-align: center;
+    .ui-dropdown-menu {
+        .ui-dropdown-item {
+            color: #333333;
+            font-size: 12px;
+            padding: 0;
+            text-indent: 0;
+            text-align: center;
+        }
+        .ui-dropdown-item-hover {
+            background: #f5f5f5;
+        }
+        .ui-dropdown-item-selected {
+            background: #3775c0;
+        }
+        .ui-dropdown:hover .ui-dropdown-source {
+            border-color: #3775c0;
+            border-bottom-color: #cccccc;
+        }
     }
-    .ui-dropdown-item-hover {
-        background: #f5f5f5;
-    }
-    .ui-dropdown-item-selected {
-        background: #3775c0;
-    }
-    .ui-dropdown:hover .ui-dropdown-source {
-        border-color: #3775c0;
-        border-bottom-color: #cccccc;
-    }
-
 }

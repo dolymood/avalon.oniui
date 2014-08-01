@@ -2,7 +2,7 @@
   * @description flipswitch组件，将checkbox表单元素转化成富UI的开关
   *
   */
-define(["avalon", "text!./avalon.flipswitch.html", "draggable/avalon.draggable", "css!./avalon.flipswitch.css", "css!../chameleon/oniui-common.css"], function(avalon, template) {
+define(["avalon", "text!./avalon.flipswitch.html", "../draggable/avalon.draggable", "css!./avalon.flipswitch.css", "css!../chameleon/oniui-common.css"], function(avalon, template) {
 
     var svgSupport = !!document.createElementNS && !!document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect,
         radiusSupport =typeof avalon.cssName("border-radius") == "string"
@@ -111,6 +111,8 @@ define(["avalon", "text!./avalon.flipswitch.html", "draggable/avalon.draggable",
                 divCon = null
 
                 inputEle = element
+                // 阻止节点移除事件触发$destroy
+                inputEle.msRetain = true;
 
                 inputEle.parentNode.removeChild(inputEle)
                 inputEle.style.display = "none"
@@ -122,6 +124,7 @@ define(["avalon", "text!./avalon.flipswitch.html", "draggable/avalon.draggable",
                 inputEle.setAttribute("ms-checked", "checked")
 
                 newDiv.appendChild(inputEle)
+                inputEle.msRetain = false;
 
                 bar = newDiv.firstChild
 
@@ -324,7 +327,7 @@ define(["avalon", "text!./avalon.flipswitch.html", "draggable/avalon.draggable",
     widget.defaults = {
         toggle: true, //@param 组件是否显示，可以通过设置为false来隐藏组件
         onText: "<b class=\"ui-flipswitch-on\"></b>",           //@param 选中状态提示文字
-        offText: "&times;",         //@param 未选中状态提示文字
+        offText: "",//"&times;",         //@param 未选中状态提示文字
         size: "normal",         //@param 滑动条类型，默认normal，可设置为large,small,mini，以及其他任意组件不自带的名词，可以用来注入自定义class，生成ui-flipswitch-{{size}}添加给flipswitch模板容器
         theme: "normal",        //@param 主题，normal,success,warning,danger
         draggable: false,       //@param 是否支持拖动切换状态

@@ -1,4 +1,4 @@
-define(["avalon.getModel", 
+define(["../avalon.getModel", 
     "text!./avalon.dialog.html",
     "css!../chameleon/oniui-common.css", 
     "css!./avalon.dialog.css"
@@ -33,11 +33,22 @@ define(["avalon.getModel",
             _innerWrapper = _innerWraperArr[1], //inner wrapper html
             _lastContent = "", //dialog content html
             lastContent = "", //dialog content node
-            $element = avalon(element);
-
+            $element = avalon(element),
+            onConfirm = options.onConfirm,
+            onConfirmVM = null,
+            onCancel = options.onCancel,
+            onCancelVM = null;
+        if (typeof onConfirm === "string") {
+            onConfirmVM = avalon.getModel(onConfirm, vmodels);
+            options.onConfirm = onConfirmVM && onConfirmVM[1][onConfirmVM[0]].bind(vmodels) || avalon.noop;
+        }
+        if (typeof onCancel ==="string") {
+            onCancelVM = avalon.getModel(onCancel, vmodels);
+            options.onCancel = onCancelVM && onCancelVM[1][onCancelVM[0]].bind(vmodels) || avalon.noop;
+        }
         var vmodel = avalon.define(data.dialogId, function(vm) {
             avalon.mix(vm, options);
-            vm.$skipArray = ["widgetElement", "template"];
+            vm.$skipArray = ["widgetElement", "template", "context", "modal"];
             vm.widgetElement = element;
             vm.position = "fixed";
             // 如果显示模式为alert或者配置了showClose为false，不显示关闭按钮
@@ -55,14 +66,18 @@ define(["avalon.getModel",
             }
             
             // 显示dialogmask
-            vm._open = function() {
+            vm._open = function(updateZIndex) {
                 var len = 0, //当前显示的dialog的个数
-                    selectLength = document.getElementsByTagName("select").length;
+                    selectLength = document.getElementsByTagName("select").length,
+                    maxZIndex = vmodel.zIndex;
                 avalon.Array.ensure(dialogShows, vmodel);
                 len = dialogShows.length;
                 // 通过zIndex的提升来调整遮罩层，保证层上层存在时遮罩层始终在顶层dialog下面(顶层dialog zIndex-1)但是在其他dialog上面
                 maskLayer.style.zIndex = 2 * len + maxZIndex -1;
                 element.style.zIndex =  2 * len + maxZIndex;
+                if(updateZIndex) {
+                    return ;
+                }
                 resetCenter(vmodel, element);
                 // IE6下遮罩层无法覆盖select解决办法
                 if (isIE6 && selectLength && iFrame === null && vmodel.modal) {
@@ -73,13 +88,14 @@ define(["avalon.getModel",
                     iFrame.style.height = maskLayer.style.height;
                     iFrame.style.zIndex = maskLayer.style.zIndex -1;
                 }
-                options.onOpen.call(vmodel);
+                options.onOpen.call(element, vmodel);
             }
             
             // 隐藏dialog
             vm._close = function(e) {
                 avalon.Array.remove(dialogShows, vm);
-                var len = dialogShows.length;
+                var len = dialogShows.length,
+                    maxZIndex = vmodel.zIndex;
                 vmodel.toggle = false;
                 /* 处理层上层的情况，因为maskLayer公用，所以需要其以将要显示的dialog的toggle状态为准 */
                 if (len && dialogShows[len-1].modal) {
@@ -89,6 +105,7 @@ define(["avalon.getModel",
                     if (iFrame !== null) {
                         iFrame.style.display = "none";
                     }
+                    options.onClose.call(element, vmodel);
                     return ;
                 }
                 // 重置maskLayer的z-index,当最上层的dialog关闭，通过降低遮罩层的z-index来显示紧邻其下的dialog
@@ -97,11 +114,7 @@ define(["avalon.getModel",
                 if (iFrame) {
                     iFrame.style.zIndex = layoutZIndex -1;
                 }
-                if (e) {
-                    options.onClose.call(e.target, e, vmodel);
-                } else {
-                    options.onClose.call(element, vmodel);
-                }
+                options.onClose.call(element, vmodel);
             };
 
             // 点击"取消"按钮，根据回调返回值是否为false决定是否关闭dialog
@@ -167,8 +180,13 @@ define(["avalon.getModel",
 
             vm.$init = function() {
                 var context = options.context,
+                    clientHeight = body.clientHeight,
+                    docBody = document.body,
                     // context必须是dom tree中某个元素节点对象或者元素的id，默认将dialog添加到body元素
-                    elementParent = ((avalon.type(context) === "object" && context.nodeType === 1 && document.body.contains(context)) ? context : document.getElementById(context)) || document.body;
+                    elementParent = ((avalon.type(context) === "object" && context.nodeType === 1 && docBody.contains(context)) ? context : document.getElementById(context)) || docBody;
+                if (avalon(docBody).height() < clientHeight) {
+                    avalon(docBody).css("min-height", clientHeight);
+                }
                 $element.addClass("ui-dialog");
                 element.setAttribute("ms-visible", "toggle");
                 vm._RenderView();
@@ -213,7 +231,7 @@ define(["avalon.getModel",
 
             // 可以手动设置最大zIndex
             vm.$watch("zIndex", function(val) {
-                maxZIndex = val;
+                vmodel._open(true);
             })
         });
         return vmodel;
@@ -234,6 +252,8 @@ define(["avalon.getModel",
         toggle: false, //通过此属性的决定dialog的显示或者隐藏状态
         widgetElement: "", //保存对绑定元素的引用
         context: "body", //dialog放置的元素
+        confirmName: "确定",
+        cancelName: "取消",
         getTemplate: function(str, options) {
             return str;
         },

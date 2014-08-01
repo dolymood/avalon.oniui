@@ -1,7 +1,7 @@
-define(["avalon.getModel", 
-        "datepicker/avalon.datepicker.lang",
+define(["../avalon.getModel", 
+        "./avalon.datepicker.lang",
         "text!./avalon.datepicker.html", 
-        "dropdown/avalon.dropdown.js",
+        "../dropdown/avalon.dropdown.js",
         "css!../chameleon/oniui-common.css", 
         "css!./avalon.datepicker.css"], function(avalon, holidayDate, sourceHTML) {
     var calendarTemplate = sourceHTML,
@@ -111,6 +111,8 @@ define(["avalon.getModel",
         var vmodel = avalon.define(data.datepickerId, function(vm) {
             avalon.mix(vm, options);
             vm.$skipArray = ["container"];
+            vm.$monthDom = null,
+
             vm.dateError = vm.dateError || "";
             vm.weekNames = [];
             vm.rows = [];
@@ -121,6 +123,7 @@ define(["avalon.getModel",
             vm.prevMonth = -1; //控制prev class是否禁用
             vm.nextMonth = -1; //控制next class是否禁用
             vm.month = month;
+            vm._month = vm.month + 1;
             vm.year = year;
             vm.day = day;
             vm.years = years;
@@ -151,12 +154,13 @@ define(["avalon.getModel",
             vm._afterYearRendered = function() {
                 this.setAttribute("ms-widget", "dropdown,$,$yearOpts");
                 this.setAttribute("ms-duplex", "year");
+                vmodel.$monthDom = this;
                 avalon.scan(this, vmodel);
             }
             // 月份选择器渲染ok之为其绑定dropdown组件并扫描渲染出dropdown
             vm._afterMonthRendered = function() {
                 this.setAttribute("ms-widget", "dropdown,$,$monthOpts");
-                this.setAttribute("ms-duplex", "month");
+                this.setAttribute("ms-duplex", "_month");
                 avalon.scan(this, vmodel);
             }
             // 选择日期
@@ -265,6 +269,9 @@ define(["avalon.getModel",
                     // element.msRetain = false;
                     element.value = vmodel.allowBlank ? _value : _originValue;
                 }
+                if (~vmodel.zIndex) {
+                    calendar.style.zIndex = vmodel.zIndex;
+                }
                 div = options.type ==="range" ? element["data-calenderwrapper"] : div;
                 bindEvents(calendar, div);
                 // 如果输入域不允许为空，且_originValue不存在则强制更新element.value
@@ -317,7 +324,11 @@ define(["avalon.getModel",
             }
             vmodel.onChangeMonthYear(year, vmodel.month+1, vmodel);
         })
+        vmodel.$watch("_month", function(month) {
+            vmodel.month = month - 1;
+        })
         vmodel.$watch("month", function(month) {
+            vmodel._month = month + 1;
             if(vmodel.numberOfMonths ===1) {
                 vmodel.data[0] ? vmodel.data[0].rows = calendarDays(vmodel.month, vmodel.year)[0].rows : vmodel.data = calendarDays(month, vmodel.year);
                 if(vmodel.month !== vmodel.data[0].month) {
@@ -616,6 +627,8 @@ define(["avalon.getModel",
         separator: "-",
         calendarLabel: "选择日期",
         onChangeMonthYear: avalon.noop, 
+        watermark: true,
+        zIndex: -1,
         onSelect: avalon.noop, //将废弃,相当于onSelect
         onClose: avalon.noop,
         parseDate: function(str){

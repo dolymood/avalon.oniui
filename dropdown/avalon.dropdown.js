@@ -1,7 +1,7 @@
 define(['avalon',
     'text!./avalon.dropdown.html',
-    'avalon.getModel',
-    'scrollbar/avalon.scrollbar',
+    '../avalon.getModel',
+    '../scrollbar/avalon.scrollbar',
     "css!../chameleon/oniui-common.css",
     "css!./avalon.dropdown.css"
 ], function(avalon, template) {
@@ -152,6 +152,7 @@ define(['avalon',
                     if (duplexName && (duplexModel = avalon.getModel(duplexName, vmodels))) {
                         duplexModel[1].$watch(duplexName, function(newValue) {
                             vmodel.value = newValue;
+                            vmodel.label = newValue;
                         })
                         vmodel.$watch('value', function(newValue) {
                             duplexModel[1][duplexName] = newValue
@@ -173,7 +174,7 @@ define(['avalon',
 
 
             vm._select = function(index, event) {
-                var option = vm.data[index]
+                var option = vm.data[index].$model;
                 if (option && option.enable && !option.group) {
                     //根据multiple区分对待, 多选时可以为空值
                     if (vmodel.multiple) {
@@ -194,7 +195,7 @@ define(['avalon',
                 }
             }
 
-            vm._listClick = function() {
+            vm._listClick = function(event) {
                 event.stopPropagation();
                 event.preventDefault();
                 titleNode && titleNode.focus();
